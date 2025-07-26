@@ -1,0 +1,54 @@
+overdue_queries = """
+-- 1. Detailed Overdue Report
+SELECT 
+    Loans.LoanID,
+    Books.Title AS BookTitle,
+    Members.Name AS MemberName,
+    Members.Email,
+    Loans.LoanDate,
+    Loans.DueDate,
+    DATEDIFF(CURDATE(), Loans.DueDate) AS DaysOverdue
+FROM Loans
+JOIN Books ON Loans.BookID = Books.BookID
+JOIN Members ON Loans.MemberID = Members.MemberID
+WHERE Loans.ReturnDate IS NULL
+  AND Loans.DueDate < CURDATE();
+
+-- 2. Overdue Summary Per Member
+SELECT 
+    Members.MemberID,
+    Members.Name,
+    COUNT(*) AS TotalOverdueBooks,
+    MAX(DATEDIFF(CURDATE(), Loans.DueDate)) AS MaxDaysOverdue
+FROM Loans
+JOIN Members ON Loans.MemberID = Members.MemberID
+WHERE Loans.ReturnDate IS NULL
+  AND Loans.DueDate < CURDATE()
+GROUP BY Members.MemberID;
+
+-- 3. Total Overdue Loans Report
+SELECT 
+    COUNT(*) AS TotalOverdueLoans
+FROM Loans
+WHERE Loans.ReturnDate IS NULL
+  AND Loans.DueDate < CURDATE();
+
+-- 4. Overdue Books Grouped by Due Date
+SELECT 
+    DueDate,
+    COUNT(*) AS OverdueCount
+FROM Loans
+WHERE ReturnDate IS NULL
+  AND DueDate < CURDATE()
+GROUP BY DueDate
+ORDER BY DueDate ASC;
+
+-- 5. View: OverdueBooks
+CREATE VIEW OverdueBooks AS
+SELECT 
+    Loans.LoanID,
+    Books.Title,
+    Members.Name AS MemberName,
+    Loans.LoanDate,
+    Loans.DueDate,
+    DATEDIFF(C
