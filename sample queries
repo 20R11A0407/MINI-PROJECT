@@ -1,0 +1,85 @@
+#sample_queries = """
+-- 1. View All Borrowed Books
+SELECT 
+    Loans.LoanID,
+    Members.Name AS MemberName,
+    Books.Title AS BookTitle,
+    Loans.LoanDate,
+    Loans.DueDate
+FROM Loans
+JOIN Members ON Loans.MemberID = Members.MemberID
+JOIN Books ON Loans.BookID = Books.BookID
+WHERE Loans.ReturnDate IS NULL;
+
+-- 2. View All Overdue Books
+SELECT 
+    Loans.LoanID,
+    Members.Name AS MemberName,
+    Books.Title AS BookTitle,
+    Loans.DueDate
+FROM Loans
+JOIN Members ON Loans.MemberID = Members.MemberID
+JOIN Books ON Loans.BookID = Books.BookID
+WHERE Loans.ReturnDate IS NULL
+  AND Loans.DueDate < CURDATE();
+
+-- 3. Total Number of Loans per Member
+SELECT 
+    Members.Name,
+    COUNT(Loans.LoanID) AS TotalLoans
+FROM Members
+LEFT JOIN Loans ON Members.MemberID = Loans.MemberID
+GROUP BY Members.MemberID;
+
+-- 4. Most Borrowed Books
+SELECT 
+    Books.Title,
+    COUNT(Loans.LoanID) AS TimesBorrowed
+FROM Books
+JOIN Loans ON Books.BookID = Loans.BookID
+GROUP BY Books.BookID
+ORDER BY TimesBorrowed DESC
+LIMIT 5;
+
+-- 5. Books Borrowed in the Last 30 Days
+SELECT 
+    Books.Title,
+    Loans.LoanDate,
+    Members.Name AS BorrowedBy
+FROM Loans
+JOIN Books ON Loans.BookID = Books.BookID
+JOIN Members ON Loans.MemberID = Members.MemberID
+WHERE Loans.LoanDate >= CURDATE() - INTERVAL 30 DAY;
+
+-- 6. Available Books (Not Fully Loaned Out)
+SELECT 
+    B.Title,
+    B.Copies,
+    (B.Copies - COUNT(L.BookID)) AS AvailableCopies
+FROM Books B
+LEFT JOIN Loans L ON B.BookID = L.BookID AND L.ReturnDate IS NULL
+GROUP BY B.BookID;
+
+-- 7. Members with Active Loans
+SELECT DISTINCT
+    Members.MemberID,
+    Members.Name,
+    Members.Email
+FROM Members
+JOIN Loans ON Members.MemberID = Loans.MemberID
+WHERE Loans.ReturnDate IS NULL;
+
+-- 8. Daily Loan Activity
+SELECT 
+    LoanDate,
+    COUNT(*) AS TotalLoans
+FROM Loans
+GROUP BY LoanDate
+ORDER BY LoanDate DESC;
+"""
+
+# Save to file
+with open("library_sample_queries.sql", "w") as f:
+    f.write(sample_queries)
+
+print("SQL file created: library_sample_queries.sql")
